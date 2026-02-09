@@ -1,0 +1,22 @@
+{
+  "name": "room-portfolio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "dependencies": {
+    "gsap": "^3.14.2",
+    "sass": "^1.97.3",
+    "three": "^0.182.0"
+  }
+}

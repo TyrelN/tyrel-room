@@ -2,11 +2,15 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Mouse Memoirs', sans-serif;
 }
 
+body {
+  font-family: 'Mouse Memoirs', sans-serif;
+}
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Mouse Memoirs', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -111,10 +115,10 @@
     
     .dialogue-text {
       color: #2c1810;
-      font-size: 18px;
+      font-size: 32px;
       line-height: 1.6;
       margin-top: 5px;
-      font-family: 'Georgia', serif;
+      font-family: 'Mouse Memoirs', serif;
       position: relative;
       z-index: 1;
     }
@@ -133,6 +137,287 @@
       .dialogue-text {
         font-size: 16px;
       }
+    }
+  }
+}
+
+
+#page-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(20, 15, 10, 0.55);
+  backdrop-filter: blur(6px);
+
+  z-index: 1100;
+  pointer-events: auto;
+}
+
+
+.page-modal-content {
+  width: min(1100px, 92vw);
+  height: min(820px, 88vh);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(#f5e6d3, #f5e6d3) padding-box,
+    linear-gradient(
+      180deg,
+      #a0754a 20%,
+      #8b6343 50%,
+      #7a5439 80%,
+      #6d4a33 100%
+    ) border-box;
+
+  border: 10px solid transparent;
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+
+  overflow: hidden;
+}
+
+
+.page-modal-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(184, 133, 77, 0.06) 0%,
+      rgba(157, 107, 71, 0.04) 30%,
+      rgba(122, 84, 57, 0.03) 60%,
+      rgba(122, 84, 57, 0.05) 100%
+    );
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+
+.page-close {
+  position: absolute;
+  top: 18px;
+  right: 26px;
+
+  background: none;
+  border: none;
+
+  font-size: 32px;
+  color: #9d6b47;
+  cursor: pointer;
+  z-index: 2;
+
+  &:hover {
+    color: #7a5439;
+  }
+}
+
+
+.page-body {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+
+  padding: 40 48;
+  overflow-y: auto;
+
+  color: #2c1810;
+  font-family: 'Mouse Memoirs', serif;
+  line-height: 1.7;
+
+  h1 {
+    font-size: 56px;
+    margin-bottom: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  h2 {
+    font-size: 36px;
+    margin-top: 60px;
+    margin-bottom: 14px;
+    letter-spacing: 0.03em;
+  }
+
+  p {
+    font-size: 24px;
+    max-width: 70ch;
+    margin-bottom: 18px;
+  }
+
+  a {
+    color: #7a5439;
+    text-decoration: underline;
+
+    &:hover {
+      color: #5a3b28;
+    }
+  }
+}
+
+.page-inner {
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  padding: 24px 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .page-modal-content {
+    border-radius: 14px;
+    border-width: 8px;
+  }
+
+  .page-body {
+    padding: 40px 30px;
+
+    h1 {
+      font-size: 36px;
+    }
+
+    h2 {
+      font-size: 26px;
+    }
+
+    p {
+      font-size: 18px;
+    }
+  }
+}
+
+.work-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 50px;
+
+  margin-top: 60px;
+  margin-bottom:40px;
+  width: 100%;
+}
+
+.pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pillar h3 {
+  font-size: 32px;
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+}
+
+.pillar p {
+  font-size: 22px;
+  opacity: 0.9;
+  max-width: 28ch;
+}
+
+.page-body h2 {
+  position: relative;
+}
+
+.page-body h2::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 2px;
+  margin: 12px auto 0;
+  background: rgba(122, 84, 57, 0.4);
+}
+
+.plank-image {
+  margin: 28px 0 42px;
+  display: flex;
+  justify-content: center;
+}
+
+
+.plank-image img {
+  max-width: 100%;
+  width: 300px; // adjust per plank if needed
+  height: auto;
+
+  border-radius: 14px;
+
+  background:
+    //linear-gradient(#f5e6d3, #f5e6d3) padding-box,
+    linear-gradient(#1c2129, #2f2d4c) padding-box,
+    linear-gradient(
+      180deg,
+      #a0754a 20%,
+      #8b6343 50%,
+      #7a5439 80%,
+      #6d4a33 100%
+    ) border-box;
+
+  border: 6px solid transparent;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+
+.page-inner.contact h2 {
+  margin-top: 48px;
+}
+
+.work-references {
+  width: 100%;
+  max-width: 900px;
+  text-align: left;
+
+  h2 {
+    font-size: 32px;
+    margin-bottom: 18px;
+    letter-spacing: 0.03em;
+  }
+
+  ul {
+    list-style-type: disc;
+    margin-left: 28px;
+
+    li {
+      font-size: 22px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      opacity: 0.95;
+    }
+
+    strong {
+      color: #7a5439; // matches accent / wooden tone
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .work-references {
+    h2 {
+      font-size: 26px;
+      margin-bottom: 14px;
+    }
+
+    ul li {
+      font-size: 18px;
+      margin-bottom: 10px;
     }
   }
 }

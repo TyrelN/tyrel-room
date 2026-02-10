@@ -4,6 +4,8 @@ import "./style.scss";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { Howl, Howler } from "howler";
+import { clamp } from "three/src/math/MathUtils.js";
 
 const canvas = document.querySelector("#experience-canvas");
 const sizes = {
@@ -15,9 +17,212 @@ const sizes = {
 const defaultCameraPosition = new THREE.Vector3(23.50169202671876, 10.700431771364817, -32.55024110340833);
 let defaultCameraTarget = new THREE.Vector3(0, 0, 0); // ADD THIS LINE
 
+const minPan = new THREE.Vector3(-10, -5, -5);
+const maxPan = new THREE.Vector3(10, 5, 5);
+
 // Store the ORIGINAL default position (never modified)
 const ORIGINAL_CAMERA_POS = new THREE.Vector3(23.50169202671876, 10.700431771364817, -32.55024110340833);
 const ORIGINAL_CAMERA_TARGET = new THREE.Vector3(0, 0, 0);
+
+//modal content for work planks
+const PAGE_CONTENT = {
+  work: `
+    <div class="page-inner">
+      <h1>Work</h1>
+
+    <p>
+    My work sits at the intersection of design, technology, and experience. 
+    Each project is an opportunity to craft environments that feel purposeful, 
+    memorable, and intuitive. Here are the areas I focus on most:
+  </p>
+
+      <section class="work-pillars">
+        <div class="pillar">
+          <h3>Technical Art</h3>
+          <p>
+            Asset pipelines, shader development, and more towards charming experiences
+          </p>
+        </div>
+
+        <div class="pillar">
+          <h3>Software Development</h3>
+          <p>
+            Interactive, full-stack systems built with modern
+            web technologies and care.
+          </p>
+        </div>
+
+        <div class="pillar">
+          <h3>User Experience</h3>
+          <p>
+            Interfaces designed as environments,
+            storytelling through intentional design.
+          </p>
+        </div>
+      </section>
+
+       <p>
+    I approach every project as a balance between craft and curiosity: 
+    how can code, design, and narrative combine to make something 
+    that not only works but feels alive?
+  </p>
+
+   <section class="work-references">
+    <h2>Some Previous Projects</h2>
+  <ul>
+    <li>
+      <a href="https://www.villasarmonia.casa/" target="_blank" rel="noopener noreferrer">
+        <strong>Villas Armonia Real Estate Website</strong>
+      </a>
+      — A website for the documenting, marketing, and sales of a unique real estate development project in Mexico, built with interactive design elements to capture the spirit of the villas and their surroundings while ergonomically showcasing villas for users to invest in.
+    </li>
+
+    <li>
+      <a href="https://www.nicolavalleyrescue.ca/" target="_blank" rel="noopener noreferrer">
+        <strong>Nicola Valley Animal Rescue Web Platform</strong>
+      </a>
+      — A full-stack platform I built for the rescue I was involved with throughout my childhood. They use it mostly for donations and marketing, but it also has content management features and adoption application tooling.
+    </li>
+
+    <li>
+      <a href="https://waterways.ok.ubc.ca/Home.html" target="_blank" rel="noopener noreferrer">
+        <strong>Okanagan Waterways 3D visualization Project</strong>
+      </a>
+      — A collaborative project with UBC to create an interactive 3D visualization of the Okanagan watershed, combining accurate regional topology with engaging design to educate and inspire action around water conservation.
+    </li>
+  </ul>
+</section>
+    </div>
+  `,
+
+  about: `
+    <div class="page-inner">
+       <h1>About Me</h1>
+  <div class="plank-image">
+    <img src="/images/me.webp" alt="picture of me" />
+  </div>
+  <p>
+    I’m a developer and designer who builds interactive spaces
+    where code, memory, and storytelling meet.
+    I’m interested less in screens, and more in places.
+  </p>
+
+  <p>
+    This room is part portfolio, part mnemonic device —
+    a literal piece of my mind translated into a digital space.
+    Each object holds work, ideas, or moments that
+    shaped how I think about building experiences and myself.
+  </p>
+
+  <h2>How I Work</h2>
+
+  <p>
+    My background in software development gives me a strong
+    technical foundation, but my approach is driven by
+    experience design: how something feels to explore,
+    remember, and return to.
+  </p>
+
+  <p>
+    I enjoy working at the intersection of structure and
+    intuition — using systems like Three.js and modern web
+    technologies to create environments that feel personal,
+    tactile, and intentional.
+  </p>
+
+  <h2>What I’m Drawn To</h2>
+
+  <p>
+    Stylized visuals. Thoughtful interaction.
+    Interfaces that reveal themselves slowly.
+    Projects where narrative and utility
+    aren’t separate concerns.
+  </p>
+    </div>
+  `,
+
+  contact: `
+   <div class="page-inner contact">
+  <h1>Contact</h1>
+
+  <div class="plank-image">
+    <img src="/images/penelope_logo.svg" alt="Illustration representing connection and correspondence" />
+  </div>
+
+  <p>
+    I’m always interested in conversations that sit at the
+    intersection of design, technology, and experience.
+    I’m currently seeking opportunities where thoughtful
+    interaction design and creative engineering are valued.
+  </p>
+
+  <h2>What I’m Open To</h2>
+
+  <p>
+    Collaboration on interactive or experimental projects.
+    Roles that value thoughtful UX and creative engineering.
+    Conversations about spatial storytelling, WebGL,
+    or unconventional portfolios.
+  </p>
+
+  <h2>Best Ways to Reach Me</h2>
+
+  <p>
+    Email is the most reliable way to start a conversation:
+    <br />
+    <strong>tyrel.a.narciso@gmail.com</strong>
+  </p>
+
+  <p>
+    You can also find my work and ongoing experiments here:
+    <br />
+    <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+    ·
+    <a href="https://linkedin.com/in/yourusername" target="_blank">LinkedIn</a>
+  </p>
+
+  <h2>What Helps</h2>
+
+  <p>
+    A short note about what caught your attention,
+    what you’re building, or what kind of collaboration
+    you have in mind is always appreciated.
+  </p>
+</div>
+  `,
+  secret: `
+    <div class="page-inner">
+      <h1>Questions you might have for me, and my answers</h1>
+      <p>
+        This plank is intended to hold thoughts or questions I often get from people. It’s a bit of a “frequently asked questions” but also a place to address common curiosities or misconceptions about me and my work that I want to clarify for anyone who’s interested enough to find this plank.
+      </p>
+
+      <h2>Why a 3D portfolio?</h2>
+
+      <p>
+        I wanted to create a space that felt more personal and memorable than a traditional portfolio website. By building a 3D environment, I can share not just my work, but also my design sensibility, storytelling approach, and personality in a way that’s more attuned to my outlook. It’s also a way to demonstrate my skills in multiple disciplines towards interactive design.
+      </p>
+
+      <h2>Is this meant to be like a game?</h2>
+
+      <p>
+        Not exactly. While there are interactive elements and it’s designed to be explored, it’s not a game in the traditional sense. It’s more of an interactive experience or digital diorama that invites curiosity and discovery. The focus is on creating a space that feels alive and personal rather than on gameplay mechanics or challenges.
+      </p>
+
+      <h2>What was your process for building this?</h2>
+
+      <p>
+        I started by sketching out the layout and key elements of the room, thinking about how to represent different aspects of my work and personality through objects and interactions. Then I modeled the room and objects in Blender, paying attention to how they would look and feel in 3D. After that, I imported everything into Three.js, set up the camera and controls, and added interactivity and animations. It was an iterative process of building, testing, and refining until it felt right.
+      </p>
+
+      <p>
+        Special mention to this fantastic tutorial by another developer who built a similar portfolio in Three.js, which was a huge inspiration and resource for me: https://www.youtube.com/watch?v=AB6sulUMRGE
+      </p>
+
+
+    </div>
+  `,
+};
 
 
 const fans = [];
@@ -27,8 +232,10 @@ let interactables = [];
 let hovered = null;
 let isZoomedIn = false;
 let audioStarted = false;
+// Add this to your global variables
+let isAnimating = false;
 
-const EXCLUDED_IDS = ["secret-shelf-First_Tex", "computer-monitor"]; // Filter out excluded objects
+const EXCLUDED_IDS = ["secret-shelf-First_Tex"]; // Filter out excluded objects
 // Loaders
 const textureLoader = new THREE.TextureLoader();
 const dracoLoader = new DRACOLoader();
@@ -204,54 +411,52 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.z = 5;
 camera.position.set(defaultCameraPosition.x, defaultCameraPosition.y, defaultCameraPosition.z);
 
+
+// AUDIO SETUP
+
+// Create sound effects
+const focusSound = new Howl({
+  src: ['/sounds/focus.wav'],
+  volume: 0.5,
+  preload: true
+});
+
+const defocusSound = new Howl({
+  src: ['/sounds/click.wav'],
+  volume: 0.5,
+  preload: true
+});
+
+// Create background music
+const backgroundMusic = new Howl({
+  src: ['/sounds/waltz.mp3'],
+  volume: 0.1,
+  loop: true,
+  preload: true,
+  onload: function() {
+    console.log('Waltz loaded successfully');
+  },
+  onloaderror: function(id, error) {
+    console.error('Error loading waltz:', error);
+  },
+  onplay: function() {
+    console.log('Background music started');
+  }
+});
+
 function startAudio() {
-  console.log('Starting audio...');
-  console.log('Audio context state:', backgroundMusic.context.state);
-  console.log('Background music buffer:', backgroundMusic.buffer);
-  console.log('Is playing:', backgroundMusic.isPlaying);
+   console.log('Starting audio...');
   
-  if (backgroundMusic.context.state === 'suspended') {
-    backgroundMusic.context.resume().then(() => {
+  // Check if audio context exists before trying to resume
+  if (Howler.ctx && Howler.ctx.state === 'suspended') {
+    Howler.ctx.resume().then(() => {
       console.log('Audio context resumed');
     });
   }
-  
-  // Add a small delay to ensure context is ready
-  setTimeout(() => {
-    if (backgroundMusic.buffer && !backgroundMusic.isPlaying) {
+    if (!backgroundMusic.playing()) {
       backgroundMusic.play();
-      console.log('Background music started');
     }
-  }, 100);
-}
-// Add this near the top with your other global variables
-const audioListener = new THREE.AudioListener();
-camera.add(audioListener);
-
-// Create audio sources
-const focusSound = new THREE.Audio(audioListener);
-const defocusSound = new THREE.Audio(audioListener);
-const backgroundMusic = new THREE.Audio(audioListener);
-
-// Audio loader
-const audioLoader = new THREE.AudioLoader();
-
-// Load sounds
-audioLoader.load('/sounds/focus.wav', (buffer) => {
-  focusSound.setBuffer(buffer);
-  focusSound.setVolume(0.5);
-});
-
-audioLoader.load('/sounds/click.wav', (buffer) => {
-  defocusSound.setBuffer(buffer);
-  defocusSound.setVolume(0.5);
-});
-
-audioLoader.load('/sounds/waltz.mp3', (buffer) => {
-  backgroundMusic.setBuffer(buffer);
-  backgroundMusic.setLoop(true);
-  backgroundMusic.setVolume(0.3);
-});
+  }
 
 function initAudio() {
   if (!audioStarted) {
@@ -260,7 +465,8 @@ function initAudio() {
   }
 }
 
-// Start audio on first click, mousemove, or touch
+
+// Start audio on first interaction
 canvas.addEventListener('click', initAudio, { once: true });
 canvas.addEventListener('mousemove', initAudio, { once: true });
 canvas.addEventListener('touchstart', initAudio, { once: true });
@@ -302,7 +508,56 @@ VideoTexture.minFilter = THREE.LinearFilter;
 VideoTexture.magFilter = THREE.LinearFilter;
 VideoTexture.format = THREE.RGBAFormat;
 
-// Dialogue system
+// Dialogue / modal system
+
+function createPageModal() {
+  let modal = document.getElementById('page-modal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'page-modal';
+  modal.innerHTML = `
+    <div class="page-modal-content">
+      <button class="page-close">×</button>
+      <div class="page-body"></div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector('.page-close').addEventListener('click', hidePageModal);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      hidePageModal();
+    }
+  });
+
+  return modal;
+}
+
+
+function showPageModal(type) {
+  const modal = createPageModal();
+  const body = modal.querySelector('.page-body');
+
+  body.innerHTML = PAGE_CONTENT[type] || '<p>Content not found.</p>';
+
+  modal.style.display = 'flex';
+
+  // Optional: pause scene interactions
+  controls.enabled = false;
+}
+
+
+function hidePageModal() {
+  const modal = document.getElementById('page-modal');
+  if (!modal) return;
+
+  modal.style.display = 'none';
+  controls.enabled = true;
+}
+
 
 // Create the dialogue modal function
 function showDialogue(dialogueText) {
@@ -352,6 +607,8 @@ function showDialogue(dialogueText) {
 }
 
 function onClick(event) {
+  // Prevent clicks during animation
+  if (isAnimating) return;
   // If already zoomed in, zoom out and close dialogue
   if (isZoomedIn) {
     zoomOut();
@@ -360,6 +617,21 @@ function onClick(event) {
 
   if (!hovered) return;
   
+  //if it's a link, redirect to that and return
+  const url = hovered.userData.link ? hovered.userData.link : null;
+  if (url) {
+    console.log("url found")
+    window.open(url, '_blank');
+    return;
+  }
+
+  //if it's a plank (work, about, contact), create a full screen modal and display the dialogue text with overflow scroll if needed, and return
+  if (hovered.userData.modal) {
+    console.log("plank found")
+    showPageModal(hovered.userData.modal);
+    return;
+  }
+
   // Get the zoom target empty object
   const zoomTarget = world.getObjectByName(hovered.userData.zoomTarget);
   
@@ -374,14 +646,15 @@ function onClick(event) {
 function zoomIn(zoomTarget) {
   controls.enabled = false;
   isZoomedIn = true;
+  isAnimating = true; // Start animation lock
   
   if (hovered) {
     playHoverAnimation(hovered, false);
     canvas.style.cursor = 'default';
   }
   
-   // Play focus sound
-  if (focusSound.buffer) focusSound.play();
+  // Play focus sound with Howler
+  focusSound.play();
 
   const targetLookAt = new THREE.Vector3(
     hovered.position.x,
@@ -406,14 +679,16 @@ function zoomIn(zoomTarget) {
     duration: 1.0,
     ease: "power2.inOut",
     onUpdate: () => controls.update(),
-    onComplete: () => showDialogue(hovered.userData.dialogue)
+    onComplete: () => {
+      isAnimating = false; // Unlock after animation completes
+      showDialogue(hovered.userData.dialogue);
+    }
   });
 }
 // Zoom out to default position - instant
 function zoomOut() {
-  // Play defocus sound
-  if (defocusSound.buffer) defocusSound.play();
-
+  // Play defocus sound with Howler
+  defocusSound.play();
 
   // Close the dialogue modal
   const modal = document.getElementById('dialogue-modal');
@@ -496,8 +771,22 @@ gltfLoader.load(
 );
 
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.minPolarAngle = 0.4; // Prevent looking too far down
+controls.maxPolarAngle = Math.PI / 2.2; // Prevent looking too far up
+controls.minAzimuthAngle = -Math.PI / -2; // Limit left rotation
+controls.maxAzimuthAngle = Math.PI / 1; // Limit right rotation
+controls.minDistance = 5; // Limit zoom in
+controls.maxDistance = 50; // Limit zoom out
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
+
+controls.screenSpacePanning = false; // Ensure panning is in world space
+
+function clampTarget(){
+  controls.target.x = Math.max(minPan.x, Math.min(maxPan.x, controls.target.x));
+  controls.target.y = Math.max(minPan.y, Math.min(maxPan.y, controls.target.y));
+  controls.target.z = Math.max(minPan.z, Math.min(maxPan.z, controls.target.z));
+}
 controls.target.copy(ORIGINAL_CAMERA_TARGET);
 controls.update();
 
@@ -517,6 +806,12 @@ window.addEventListener("resize", () => {
 });
 
 function playHoverAnimation(object, isHovering) {
+  // Don't animate certain objects
+  const id = object.userData?.id || object.name;
+  if (id === 'computer-monitor' || object.name.includes('monitor') || id === 'piano-keys' || object.name.includes('piano')) {
+    return; // Skip animation for monitor
+  }
+
   if (isHovering) {
     // Example: Scale up the object slightly on hover
     gsap.to(object.scale, { x: 1.3, y: 1.3, z: 1.3, duration: 0.3 });
@@ -566,6 +861,7 @@ const render = () => {
   }
 
   controls.update();
+  clampTarget();
   renderer.render(scene, camera);
   window.requestAnimationFrame(render);
 };

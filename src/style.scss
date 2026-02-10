@@ -36,3 +36,103 @@
 
   }
 }
+
+#dialogue-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  background-color: transparent;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 40px;
+  pointer-events: none;
+  
+  .modal-content {
+    padding: 40px 45px; // Increased from 35px to make it taller
+    border-radius: 16px;
+    max-width: 900px;
+    width: 85%;
+    position: relative;
+    pointer-events: auto;
+    
+    // Wooden border with gradient using pseudo-element
+    background: 
+      linear-gradient(#f5e6d3, #f5e6d3) padding-box, // Inner beige
+      linear-gradient(
+        180deg,
+        #a0754a 25%,     // Gradual transition
+        #8b6343 50%,     // Mid-tone
+        #7a5439 75%,     // Darker
+        #6d4a33 100%     // Darkest at bottom
+      ) border-box;
+    
+    border: 12px solid transparent; // Creates space for the gradient border
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    
+    // Wood grain texture overlay
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 16px;
+      background-image: 
+        linear-gradient(
+          180deg, 
+          rgba(184, 133, 77, 0.08) 0%,
+          rgba(157, 107, 71, 0.05) 30%,
+          rgba(122, 84, 57, 0.03) 60%,
+          rgba(122, 84, 57, 0.06) 100%
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .close-button {
+      position: absolute;
+      top: 12px;
+      right: 22px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #9d6b47;
+      cursor: pointer;
+      z-index: 1;
+      
+      &:hover {
+        color: #7a5439;
+      }
+    }
+    
+    .dialogue-text {
+      color: #2c1810;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-top: 5px;
+      font-family: 'Georgia', serif;
+      position: relative;
+      z-index: 1;
+    }
+  }
+  
+  // Mobile responsive
+  @media (max-width: 768px) {
+    padding-bottom: 20px;
+    
+    .modal-content {
+      max-width: 95%;
+      padding: 32px 35px; // Taller on mobile too
+      border-radius: 12px;
+      border: 10px solid transparent;
+      
+      .dialogue-text {
+        font-size: 16px;
+      }
+    }
+  }
+}

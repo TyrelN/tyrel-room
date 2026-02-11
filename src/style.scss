@@ -145,6 +145,16 @@ body {
   opacity: 0.95;
 }
 
+.loading-screen p {
+  font-size: 24px;
+  margin-top: 12px;
+  color: #6e4545;
+}
+
+.loading-screen h2 {
+  color: #7d5050;
+}
+
 .no-sound-button {
   margin-top: 20px;
   font-family: "Mouse Memoirs", sans-serif;
@@ -391,7 +401,7 @@ body {
   padding: 40 48;
   overflow-y: auto;
 
-  color: #2c1810;
+  color: #54372b;
   font-family: 'Mouse Memoirs', serif;
   line-height: 1.7;
 

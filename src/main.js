@@ -56,7 +56,7 @@ let audioStarted = false;
 // Add this to your global variables
 let isAnimating = false;
 let shelfAnimating = false; // Lock to prevent multiple shelf animations at once
-let shelfOpened = true; // Track if the secret shelf has been moved
+let shelfOpened = false; // Track if the secret shelf has been moved
 
 let isModalOpen = true;
 let isMuted = false;

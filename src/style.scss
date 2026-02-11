@@ -169,6 +169,7 @@ body {
 }
 
 @media (max-width: 768px) {
+
   .loading-screen::before,
   .loading-screen::after {
     inset: 4vh 4vw;
@@ -176,20 +177,37 @@ body {
     border-width: 10px;
   }
 
+  .loading-page {
+    padding: 0 6vw;
+  }
+
   .loading-screen h1 {
-    font-size: 40px;
+    font-size: 32px;
+    margin-bottom: 12px;
   }
 
   .loading-screen-button {
-    font-size: 32px;
-    padding: 12px 40px;
+    font-size: 24px;
+    padding: 10px 28px;
+    margin-bottom: 20px;
   }
 
   .instructions {
-    font-size: 18px;
+    font-size: 16px;
+    line-height: 1.4;
+    max-width: 90%;
+  }
+
+  .loading-screen p {
+    font-size: 16px;
+  }
+
+  .no-sound-button {
+    font-size: 16px;
+    padding: 8px 20px;
+    margin-top: 16px;
   }
 }
-
 
 //Experience
 
@@ -326,11 +344,12 @@ body {
 
 .page-modal-content {
   width: min(1100px, 92vw);
-  height: min(820px, 88vh);
-
+  height: min(820px, 90dvh);
   position: relative;
   display: flex;
   flex-direction: column;
+
+  overflow: hidden;
 
   border-radius: 18px;
 
@@ -381,7 +400,7 @@ body {
   background: none;
   border: none;
 
-  font-size: 32px;
+  font-size: 60px;
   color: #9d6b47;
   cursor: pointer;
   z-index: 2;
@@ -393,12 +412,13 @@ body {
 
 
 .page-body {
+  flex: 1;
   display: flex;
   justify-content: center;
   position: relative;
   z-index: 1;
 
-  padding: 40 48;
+  padding: 40px 48px;
   overflow-y: auto;
 
   color: #54372b;
@@ -481,6 +501,13 @@ body {
   margin-top: 60px;
   margin-bottom:40px;
   width: 100%;
+}
+
+  @media (max-width: 768px) {
+  .work-pillars {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
 }
 
 .pillar {

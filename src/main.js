@@ -14,22 +14,200 @@ const sizes = {
 };
 
 // Global variables
-const defaultCameraPosition = new THREE.Vector3(23.50169202671876, 10.700431771364817, -32.55024110340833);
+const defaultCameraPosition = new THREE.Vector3(
+  23.50169202671876,
+  10.700431771364817,
+  -32.55024110340833,
+);
 let defaultCameraTarget = new THREE.Vector3(0, 0, 0); // ADD THIS LINE
 
 const minPan = new THREE.Vector3(-10, -5, -5);
 const maxPan = new THREE.Vector3(10, 5, 5);
 
+// Default scene bounds
+const defaultBounds = {
+  minPolarAngle: 0.4,
+  maxPolarAngle: Math.PI / 2.2,
+  minAzimuthAngle: -Math.PI / -2,
+  maxAzimuthAngle: Math.PI / 1,
+  minDistance: 5,
+  maxDistance: 50,
+  minPan: minPan,
+  maxPan: maxPan,
+};
+
 // Store the ORIGINAL default position (never modified)
-const ORIGINAL_CAMERA_POS = new THREE.Vector3(23.50169202671876, 10.700431771364817, -32.55024110340833);
+const ORIGINAL_CAMERA_POS = new THREE.Vector3(
+  23.50169202671876,
+  10.700431771364817,
+  -32.55024110340833,
+);
 const ORIGINAL_CAMERA_TARGET = new THREE.Vector3(0, 0, 0);
+
+const fans = [];
+const secret = [];
+let world; // Add this line to declare the variable
+let sceneReady = false;
+let interactables = [];
+let hovered = null;
+let shelfGroup = null; // Declare shelfGroup in the global scope
+let isZoomedIn = false;
+let audioStarted = false;
+// Add this to your global variables
+let isAnimating = false;
+let shelfAnimating = false; // Lock to prevent multiple shelf animations at once
+let shelfOpened = true; // Track if the secret shelf has been moved
+
+let isModalOpen = true;
+let isMuted = false;
+
+//secret shelf group to hold the shelf and its contents together for easier movement
+const shelfParts = [];
+
+// INTRO SETUP
+
+const manager = new THREE.LoadingManager();
+
+const loadingScreen = document.querySelector(".loading-screen");
+const loadingScreenButton = document.querySelector(".loading-screen-button");
+const noSoundButton = document.querySelector(".no-sound-button");
+
+
+manager.onLoad = function () {
+  loadingScreenButton.style.border = "8px solid #a1abf2";
+  loadingScreenButton.style.background = "#2b2749";
+  loadingScreenButton.style.color = "#e6dede";
+  loadingScreenButton.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+  loadingScreenButton.textContent = "~ Click to Enter ~";
+  loadingScreenButton.style.cursor = "pointer";
+  loadingScreenButton.style.transition =
+    "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)";
+  let isDisabled = false;
+
+  noSoundButton.textContent = "Enter without Sound";
+
+  function handleEnter(withSound = true) {
+    console.log("Enter button clicked");
+    if (isDisabled) return;
+
+  noSoundButton.textContent = "Welcome";
+  loadingScreenButton.style.cursor = "default";
+  loadingScreenButton.style.border = "8px solid #a1abf2";
+  loadingScreenButton.style.background = "#2b2749";
+  loadingScreenButton.style.color = "#e6dede";
+  loadingScreenButton.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+  loadingScreenButton.textContent = "~ Tyrel Narciso ~";
+
+    isDisabled = true;
+
+    if (!withSound) {
+      isMuted = true;
+       Howler.mute(true); // ⭐ Use Howler.mute() instead of setting volume to 0
+    } else {
+      backgroundMusic.play();
+    }
+
+    playReveal();
+  }
+
+  loadingScreenButton.addEventListener("mouseenter", () => {
+    loadingScreenButton.style.transform = "scale(1.3)";
+  });
+
+  loadingScreenButton.addEventListener("touchend", (e) => {
+    touchHappened = true;
+    e.preventDefault();
+    handleEnter();
+  });
+
+  loadingScreenButton.addEventListener("click", (e) => {
+    if (touchHappened) return;
+    handleEnter(true);
+  });
+
+  loadingScreenButton.addEventListener("mouseleave", () => {
+    loadingScreenButton.style.transform = "none";
+  });
+
+  noSoundButton.addEventListener("click", (e) => {
+    if (touchHappened) return;
+    handleEnter(false);
+  });
+};
+
+function playReveal() {
+  console.log("📖 Cinematic page peel with skew");
+
+  const page = document.querySelector(".loading-page");
+
+  const tl = gsap.timeline({
+    defaults: { ease: "power2.inOut" }
+  });
+
+  // 1️⃣ Small anticipation delay
+  tl.to({}, { duration: 0.25 });
+
+  tl.to(page, {
+  y: -8,
+  duration: 0.6,
+}, 0.25);
+
+  // 2️⃣ Subtle skew (paper tension)
+  tl.to(page, {
+    skewY: 3,
+    duration: 0.6,
+  }, 0.25);
+
+  // 3️⃣ Camera push forward
+  tl.to(camera.position, {
+    z: camera.position.z - 1.2,
+    duration: 6,
+    onUpdate: () => controls.update()
+  }, 0.25);
+
+  // 4️⃣ Main rotation
+  tl.to(loadingScreen, {
+    rotateY: -140,
+    duration: 3,
+  }, 0.35);
+
+  // 5️⃣ Inner page rotates further (curl illusion)
+  tl.to(page, {
+    rotateY: -160,
+    skewY: 0,          // relax skew during peel
+    duration: 3,
+  }, 0.35);
+
+  // 6️⃣ Fade near end
+  tl.to(loadingScreen, {
+    opacity: 0,
+    duration: 0.9,
+    onComplete: () => {
+      controls.enabled = true;
+      loadingScreen.remove();
+      console.log("✅ Page peeled cleanly");
+    }
+  }, "-=0.4");
+
+  console.log("shelfgroup", shelfGroup);
+  // Move shelf into place
+ if (shelfGroup) {
+  tl.to(shelfGroup.position, {
+    x: "-=1.28",
+    duration: 6,
+    ease: "power2.inOut",
+  }, 0.25);
+}
+    }
 
 //modal content for work planks
 const PAGE_CONTENT = {
   work: `
     <div class="page-inner">
       <h1>Work</h1>
-
+    <div class="plank-image">
+    <img src="/images/nvars-logo-dark.svg" alt="picture of me" />
+  </div>
     <p>
     My work sits at the intersection of design, technology, and experience. 
     Each project is an opportunity to craft environments that feel purposeful, 
@@ -99,7 +277,7 @@ const PAGE_CONTENT = {
     <div class="page-inner">
        <h1>About Me</h1>
   <div class="plank-image">
-    <img src="/images/me.webp" alt="picture of me" />
+    <img src="/images/output.webp" alt="picture of me" />
   </div>
   <p>
     I’m a developer and designer who builds interactive spaces
@@ -225,24 +403,14 @@ const PAGE_CONTENT = {
 };
 
 
-const fans = [];
-const secret = [];
-let world; // Add this line to declare the variable
-let interactables = [];
-let hovered = null;
-let isZoomedIn = false;
-let audioStarted = false;
-// Add this to your global variables
-let isAnimating = false;
-
-const EXCLUDED_IDS = ["secret-shelf-First_Tex"]; // Filter out excluded objects
+const EXCLUDED_IDS = []; // Filter out excluded objects
 // Loaders
-const textureLoader = new THREE.TextureLoader();
+const textureLoader = new THREE.TextureLoader(manager);
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("/draco/");
-const gltfLoader = new GLTFLoader();
+const gltfLoader = new GLTFLoader(manager);
 gltfLoader.setDRACOLoader(dracoLoader);
-const environmentMap = new THREE.CubeTextureLoader()
+const environmentMap = new THREE.CubeTextureLoader(manager)
   .setPath("/textures/skybox/")
   .load(["px.webp", "nx.webp", "py.webp", "ny.webp", "pz.webp", "nz.webp"]);
 
@@ -409,54 +577,55 @@ const camera = new THREE.PerspectiveCamera(
   1000,
 );
 camera.position.z = 5;
-camera.position.set(defaultCameraPosition.x, defaultCameraPosition.y, defaultCameraPosition.z);
-
+camera.position.set(
+  defaultCameraPosition.x,
+  defaultCameraPosition.y,
+  defaultCameraPosition.z,
+);
 
 // AUDIO SETUP
 
 // Create sound effects
 const focusSound = new Howl({
-  src: ['/sounds/focus.wav'],
+  src: ["/sounds/focus.wav"],
   volume: 0.5,
-  preload: true
+  preload: true,
 });
 
 const defocusSound = new Howl({
-  src: ['/sounds/click.wav'],
+  src: ["/sounds/click.wav"],
   volume: 0.5,
-  preload: true
+  preload: true,
 });
 
 // Create background music
 const backgroundMusic = new Howl({
-  src: ['/sounds/waltz.mp3'],
+  src: ["/sounds/waltz.mp3"],
   volume: 0.1,
   loop: true,
   preload: true,
-  onload: function() {
-    console.log('Waltz loaded successfully');
+  onload: function () {
+    console.log("Waltz loaded successfully");
   },
-  onloaderror: function(id, error) {
-    console.error('Error loading waltz:', error);
+  onloaderror: function (id, error) {
+    console.error("Error loading waltz:", error);
   },
-  onplay: function() {
-    console.log('Background music started');
-  }
+  onplay: function () {
+    console.log("Background music started");
+  },
 });
 
 function startAudio() {
-   console.log('Starting audio...');
-  
   // Check if audio context exists before trying to resume
-  if (Howler.ctx && Howler.ctx.state === 'suspended') {
+  if (Howler.ctx && Howler.ctx.state === "suspended") {
     Howler.ctx.resume().then(() => {
-      console.log('Audio context resumed');
+      console.log("Audio context resumed");
     });
   }
-    if (!backgroundMusic.playing()) {
-      backgroundMusic.play();
-    }
+  if (!backgroundMusic.playing()) {
+    backgroundMusic.play();
   }
+}
 
 function initAudio() {
   if (!audioStarted) {
@@ -465,11 +634,10 @@ function initAudio() {
   }
 }
 
-
 // Start audio on first interaction
-canvas.addEventListener('click', initAudio, { once: true });
-canvas.addEventListener('mousemove', initAudio, { once: true });
-canvas.addEventListener('touchstart', initAudio, { once: true });
+canvas.addEventListener("click", initAudio, { once: true });
+canvas.addEventListener("mousemove", initAudio, { once: true });
+canvas.addEventListener("touchstart", initAudio, { once: true });
 
 // Set background texture
 const backgroundTexture = textureLoader.load("/textures/sky/night_paint.webp");
@@ -510,12 +678,9 @@ VideoTexture.format = THREE.RGBAFormat;
 
 // Dialogue / modal system
 
-function createPageModal() {
-  let modal = document.getElementById('page-modal');
-  if (modal) return modal;
-
-  modal = document.createElement('div');
-  modal.id = 'page-modal';
+function initPageModal() {
+  const modal = document.createElement("div");
+  modal.id = "page-modal";
   modal.innerHTML = `
     <div class="page-modal-content">
       <button class="page-close">×</button>
@@ -525,39 +690,64 @@ function createPageModal() {
 
   document.body.appendChild(modal);
 
-  modal.querySelector('.page-close').addEventListener('click', hidePageModal);
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.style.display === 'flex') {
+  modal.querySelector(".page-close").addEventListener("click", hidePageModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) hidePageModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.style.display === "flex") {
       hidePageModal();
     }
   });
 
-  return modal;
+  // Preload all pages at startup
+  preloadAllPages(modal);
 }
 
+function preloadAllPages(modal) {
+  const body = modal.querySelector(".page-body");
+
+  Object.keys(PAGE_CONTENT).forEach((pageType) => {
+    const container = document.createElement("div");
+    container.className = "page-container";
+    container.dataset.page = pageType;
+    container.style.display = "none";
+    container.innerHTML = PAGE_CONTENT[pageType];
+    body.appendChild(container);
+  });
+
+  // Preload images
+  ["/images/me.webp", "/images/penelope_logo.svg"].forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+}
 
 function showPageModal(type) {
-  const modal = createPageModal();
-  const body = modal.querySelector('.page-body');
+  const modal = document.getElementById("page-modal");
+  if (!modal) return;
 
-  body.innerHTML = PAGE_CONTENT[type] || '<p>Content not found.</p>';
+  // Hide all pages
+  modal.querySelectorAll(".page-container").forEach((container) => {
+    container.style.display = "none";
+  });
 
-  modal.style.display = 'flex';
+  // Show requested page (instant - already rendered!)
+  const targetPage = modal.querySelector(`[data-page="${type}"]`);
+  if (targetPage) {
+    targetPage.style.display = "block";
+  }
 
-  // Optional: pause scene interactions
+  modal.style.display = "flex";
   controls.enabled = false;
 }
 
-
 function hidePageModal() {
-  const modal = document.getElementById('page-modal');
+  const modal = document.getElementById("page-modal");
   if (!modal) return;
-
-  modal.style.display = 'none';
+  modal.style.display = "none";
   controls.enabled = true;
 }
-
 
 // Create the dialogue modal function
 function showDialogue(dialogueText) {
@@ -566,11 +756,11 @@ function showDialogue(dialogueText) {
     return;
   }
   // Create modal if it doesn't exist
-  let modal = document.getElementById('dialogue-modal');
-  
+  let modal = document.getElementById("dialogue-modal");
+
   if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'dialogue-modal';
+    modal = document.createElement("div");
+    modal.id = "dialogue-modal";
     modal.innerHTML = `
       <div class="modal-content">
         <span class="close-button">&times;</span>
@@ -578,32 +768,32 @@ function showDialogue(dialogueText) {
       </div>
     `;
     document.body.appendChild(modal);
-    
-   // Add close functionality - zoom out when closing
-    const closeButton = modal.querySelector('.close-button');
-    closeButton.addEventListener('click', () => {
+
+    // Add close functionality - zoom out when closing
+    const closeButton = modal.querySelector(".close-button");
+    closeButton.addEventListener("click", () => {
       zoomOut();
     });
-    
+
     // Close on outside click - zoom out
-    modal.addEventListener('click', (e) => {
+    modal.addEventListener("click", (e) => {
       if (e.target === modal) {
         zoomOut();
       }
     });
-    
+
     // ESC key to close and zoom out
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isZoomedIn) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isZoomedIn) {
         zoomOut();
       }
     });
   }
-  
+
   // Set the dialogue text and show the modal
-  const dialogueTextElement = modal.querySelector('.dialogue-text');
+  const dialogueTextElement = modal.querySelector(".dialogue-text");
   dialogueTextElement.textContent = dialogueText;
-  modal.style.display = 'flex'; // Show the modal
+  modal.style.display = "flex"; // Show the modal
 }
 
 function onClick(event) {
@@ -616,30 +806,66 @@ function onClick(event) {
   }
 
   if (!hovered) return;
-  
+
   //if it's a link, redirect to that and return
   const url = hovered.userData.link ? hovered.userData.link : null;
   if (url) {
-    console.log("url found")
-    window.open(url, '_blank');
+    console.log("url found");
+    window.open(url, "_blank");
     return;
   }
 
   //if it's a plank (work, about, contact), create a full screen modal and display the dialogue text with overflow scroll if needed, and return
   if (hovered.userData.modal) {
-    console.log("plank found")
+    console.log("plank found");
     showPageModal(hovered.userData.modal);
+    return;
+  }
+
+  //if it's the secret-shelf, grab the shelf group and move it
+  if (hovered.name === "secret-shelf-First_Tex") {  
+    if (shelfAnimating) return; // block click spam while animating
+
+    const shelfGroup = hovered.parent; // Assuming the shelf parts are grouped under a parent
+    if(!shelfGroup) return;
+
+    shelfAnimating = true; // Start animation lock
+    if (shelfOpened) {
+      // Move back to original position if already opened 200 on the x axis
+      gsap.to(shelfGroup.position, {
+        x: shelfGroup.position.x - 1.28,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onUpdate: () => controls.update(),
+        onComplete: () => {
+          shelfOpened = !shelfOpened; // Toggle the shelf state
+          shelfAnimating = false; // Unlock after animation completes
+      }
+      });
+    } else {
+      // Move shelf to the right by 200 on the x axis
+      gsap.to(shelfGroup.position, {
+        x: shelfGroup.position.x + 1.28,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onUpdate: () => controls.update(),
+        onComplete: () => {
+          shelfOpened = !shelfOpened; // Toggle the shelf state
+          shelfAnimating = false; // Unlock after animation completes
+
+      }
+    });
+    }
     return;
   }
 
   // Get the zoom target empty object
   const zoomTarget = world.getObjectByName(hovered.userData.zoomTarget);
-  
+
   if (!zoomTarget) {
     console.error(`Zoom target "${hovered.userData.zoomTarget}" not found!`);
     return;
   }
-  
 
   zoomIn(zoomTarget);
 }
@@ -647,30 +873,37 @@ function zoomIn(zoomTarget) {
   controls.enabled = false;
   isZoomedIn = true;
   isAnimating = true; // Start animation lock
-  
+
   if (hovered) {
     playHoverAnimation(hovered, false);
-    canvas.style.cursor = 'default';
+    canvas.style.cursor = "default";
   }
-  
+
+  controls.minPolarAngle = 0;
+  controls.maxPolarAngle = Math.PI;
+  controls.minAzimuthAngle = -Infinity;
+  controls.maxAzimuthAngle = Infinity;
+  controls.minDistance = 0;
+  controls.maxDistance = Infinity;
+
   // Play focus sound with Howler
   focusSound.play();
 
   const targetLookAt = new THREE.Vector3(
     hovered.position.x,
     hovered.position.y,
-    hovered.position.z
+    hovered.position.z,
   );
-  
+
   // Animate camera position
   gsap.to(camera.position, {
     x: zoomTarget.position.x,
     y: zoomTarget.position.y,
     z: zoomTarget.position.z,
     duration: 1.0,
-    ease: "power2.inOut"
+    ease: "power2.inOut",
   });
-  
+
   // Animate camera target (look-at)
   gsap.to(controls.target, {
     x: targetLookAt.x,
@@ -682,7 +915,7 @@ function zoomIn(zoomTarget) {
     onComplete: () => {
       isAnimating = false; // Unlock after animation completes
       showDialogue(hovered.userData.dialogue);
-    }
+    },
   });
 }
 // Zoom out to default position - instant
@@ -691,27 +924,33 @@ function zoomOut() {
   defocusSound.play();
 
   // Close the dialogue modal
-  const modal = document.getElementById('dialogue-modal');
+  const modal = document.getElementById("dialogue-modal");
   if (modal) {
-    modal.style.display = 'none';
+    modal.style.display = "none";
   }
-  
+
   // Instantly snap camera back to original position
   camera.position.copy(ORIGINAL_CAMERA_POS);
   controls.target.copy(ORIGINAL_CAMERA_TARGET);
-  
+
   // Re-enable controls and reset zoom state
-  controls.enabled = true;  // ADD THIS LINE
+  controls.minPolarAngle = defaultBounds.minPolarAngle;
+  controls.maxPolarAngle = defaultBounds.maxPolarAngle;
+  controls.minAzimuthAngle = defaultBounds.minAzimuthAngle;
+  controls.maxAzimuthAngle = defaultBounds.maxAzimuthAngle;
+  controls.minDistance = defaultBounds.minDistance;
+  controls.maxDistance = defaultBounds.maxDistance;
+
+  controls.enabled = true;
   controls.update();
-  
+
   isZoomedIn = false;
 }
 
 let touchHappened = false;
 
 // Add click event listener to canvas
-canvas.addEventListener('click', onClick);
-
+canvas.addEventListener("click", onClick);
 
 window.addEventListener("mousemove", (event) => {
   touchHappened = false;
@@ -751,10 +990,23 @@ gltfLoader.load(
         } else if (child.name.includes("fan")) {
           fans.push(child);
         } else if (child.name.includes("secret")) {
+          if(child.name.includes("secret-shelf")){
+            shelfParts.push(child);
+          }
+          else if(child.name.includes("plank-secret"))
           secret.push(child);
+          shelfParts.push(child);
         }
       }
     });
+    shelfGroup = new THREE.Group();
+    shelfGroup.name = "shelfGroup";
+    shelfParts.forEach(part => {
+      shelfGroup.attach(part);
+    });
+    glb.scene.add(shelfGroup);
+
+
     scene.add(glb.scene);
     world = glb.scene; // Store reference to the loaded scene
     world.traverse((child) => {
@@ -764,25 +1016,31 @@ gltfLoader.load(
       }
     });
     console.log("Portfolio room loaded");
+    sceneReady = true;
     console.log(interactables.length + " interactables found");
   },
   (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
   (error) => console.error("Model load error:", error),
 );
 
+// After your gltfLoader.load():
+window.addEventListener("DOMContentLoaded", () => {
+  initPageModal();
+});
+
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.minPolarAngle = 0.4; // Prevent looking too far down
-controls.maxPolarAngle = Math.PI / 2.2; // Prevent looking too far up
-controls.minAzimuthAngle = -Math.PI / -2; // Limit left rotation
-controls.maxAzimuthAngle = Math.PI / 1; // Limit right rotation
-controls.minDistance = 5; // Limit zoom in
-controls.maxDistance = 50; // Limit zoom out
+// SET BOUNDS WHILE NOT ZOOMING
+controls.enabled = false;
+
+// Apply default bounds
+Object.assign(controls, defaultBounds);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
 controls.screenSpacePanning = false; // Ensure panning is in world space
 
-function clampTarget(){
+function clampTarget() {
+  if (isZoomedIn) return;
   controls.target.x = Math.max(minPan.x, Math.min(maxPan.x, controls.target.x));
   controls.target.y = Math.max(minPan.y, Math.min(maxPan.y, controls.target.y));
   controls.target.z = Math.max(minPan.z, Math.min(maxPan.z, controls.target.z));
@@ -808,7 +1066,14 @@ window.addEventListener("resize", () => {
 function playHoverAnimation(object, isHovering) {
   // Don't animate certain objects
   const id = object.userData?.id || object.name;
-  if (id === 'computer-monitor' || object.name.includes('monitor') || id === 'piano-keys' || object.name.includes('piano')) {
+  if (
+    id === "computer-monitor" ||
+    object.name.includes("monitor") ||
+    id === "piano-keys" ||
+    object.name.includes("piano") ||
+    id === "secret-shelf-First_Tex" ||
+    object.name.includes("secret")
+  ) {
     return; // Skip animation for monitor
   }
 
@@ -829,35 +1094,38 @@ const render = () => {
     fan.rotation.z -= 0.05; // Adjust speed as needed
   });
 
-   // Only do raycasting if NOT zoomed in
+  // Only do raycasting if NOT zoomed in
   if (!isZoomedIn) {
-  // raycaster
-  raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObjects(interactables, true);
+    // raycaster
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(interactables, true);
 
-  // find the first intersection that is NOT excluded
-   const validHit = intersects.find((hit) => {
-    const id = hit.object.userData?.id || hit.object.name;
-    return !EXCLUDED_IDS.includes(id);
-  });
+    // find the first intersection that is NOT excluded
+    const validHit = intersects.find((hit) => {
+      const id = hit.object.userData?.id || hit.object.name;
+      return !EXCLUDED_IDS.includes(id);
+    });
 
-  if (validHit) {
-    console.log("Valid hit on:", validHit.object.name);
-    const hoveredObject = validHit.object;
-     if (hovered !== hoveredObject) {
-      console.log("Hovering over:", hoveredObject.name, hoveredObject.userData);
-      if (hovered) playHoverAnimation(hovered, false);
-      playHoverAnimation(hoveredObject, true);
-      hovered = hoveredObject;
-      canvas.style.cursor = 'pointer'; // Change cursor
+    if (validHit) {
+      const hoveredObject = validHit.object;
+      if (hovered !== hoveredObject) {
+        console.log(
+          "Hovering over:",
+          hoveredObject.name,
+          hoveredObject.userData,
+        );
+        if (hovered) playHoverAnimation(hovered, false);
+        playHoverAnimation(hoveredObject, true);
+        hovered = hoveredObject;
+        canvas.style.cursor = "pointer"; // Change cursor
+      }
+    } else {
+      if (hovered) {
+        playHoverAnimation(hovered, false);
+        canvas.style.cursor = "default"; // Reset cursor
+      }
+      hovered = null;
     }
-  } else {
-    if (hovered) {
-      playHoverAnimation(hovered, false);
-      canvas.style.cursor = 'default'; // Reset cursor
-    }
-    hovered = null;
-  }
   }
 
   controls.update();

@@ -24,6 +24,163 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+
+.loading-screen {
+
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  perspective: 2000px;
+  transform-origin: left center;
+  
+
+  // ---- Page container ----
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 6vh 6vw;
+
+    border-radius: 28px;
+
+    background:
+      linear-gradient(#f5e6d3, #f5e6d3) padding-box,
+      linear-gradient(
+        180deg,
+        #a0754a 20%,
+        #8b6343 50%,
+        #7a5439 80%,
+        #6d4a33 100%
+      ) border-box;
+
+    border: 12px solid transparent;
+
+    box-shadow:
+      0 35px 80px rgba(0, 0, 0, 0.6),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+
+    z-index: -1;
+  }
+
+  // ---- Wood grain overlay ----
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 6vh 6vw;
+    right: -6px;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  background: rgba(0,0,0,0.15);
+    border-radius: 28px;
+
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(184, 133, 77, 0.06) 0%,
+        rgba(157, 107, 71, 0.04) 30%,
+        rgba(122, 84, 57, 0.03) 60%,
+        rgba(122, 84, 57, 0.05) 100%
+      );
+
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+.loading-page {
+   width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+ 
+  transform-origin: left center;
+  backface-visibility: hidden;
+
+  position: relative;
+}
+
+.loading-page::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 40px;
+  height: 100%;
+  background: linear-gradient(
+    to left,
+    rgba(0,0,0,0.15),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.loading-screen-button {
+  font-family: "Mouse Memoirs", sans-serif;
+  font-size: 48px;
+  background: none;
+  border: none;
+  color: #7a5439;
+  padding: 14px 56px;
+  margin-bottom: 40px;
+  border-radius: 1.6rem;
+  position: relative;
+}
+
+.loading-screen h1 {
+  font-size: 64px;
+  letter-spacing: 0.04em;
+  margin-bottom: 20px;
+  color: #2c1810;
+  text-align: center;
+}
+
+.instructions {
+  font-size: 26px;
+  max-width: 70ch;
+  text-align: center;
+  color: #6d4949;
+  opacity: 0.95;
+}
+
+.no-sound-button {
+  margin-top: 20px;
+  font-family: "Mouse Memoirs", sans-serif;
+  font-size: 22px;
+  background: #f5e6d3;
+  border:#ba8968 solid 4px;
+  color: #2c1810;
+  padding: 10px 30px;
+  border-radius: 1.2rem;
+  cursor: pointer;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .loading-screen::before,
+  .loading-screen::after {
+    inset: 4vh 4vw;
+    border-radius: 20px;
+    border-width: 10px;
+  }
+
+  .loading-screen h1 {
+    font-size: 40px;
+  }
+
+  .loading-screen-button {
+    font-size: 32px;
+    padding: 12px 40px;
+  }
+
+  .instructions {
+    font-size: 18px;
+  }
+}
+
+
 //Experience
 
 #experience{
@@ -65,7 +222,7 @@ body {
     
     // Wooden border with gradient using pseudo-element
     background: 
-      linear-gradient(#f5e6d3, #f5e6d3) padding-box, // Inner beige
+      linear-gradient(#f5e6d3, #f4e2cc) padding-box, // Inner beige
       linear-gradient(
         180deg,
         #a0754a 25%,     // Gradual transition
@@ -265,6 +422,10 @@ body {
       color: #5a3b28;
     }
   }
+}
+
+.page-container {
+  width: 100%;
 }
 
 .page-inner {

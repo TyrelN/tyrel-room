@@ -382,9 +382,9 @@ const PAGE_CONTENT = {
   <p>
     You can also find my work and ongoing experiments here:
     <br />
-    <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+    <a href="https://github.com/tyreln" target="_blank">GitHub</a>
     ·
-    <a href="https://linkedin.com/in/yourusername" target="_blank">LinkedIn</a>
+    <a href="https://linkedin.com/in/tyrel-narciso" target="_blank">LinkedIn</a>
   </p>
 
   <h2>What Helps</h2>

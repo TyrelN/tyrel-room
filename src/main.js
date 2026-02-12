@@ -173,7 +173,7 @@ function playReveal() {
     camera.position,
     {
       z: camera.position.z - 1.2,
-      duration: 4,
+      duration: 3,
       onUpdate: () => controls.update(),
     },
     0.25,
@@ -220,7 +220,7 @@ function playReveal() {
       shelfGroup.position,
       {
         x: "-=1.28",
-        duration: 4,
+        duration: 3,
         ease: "power2.inOut",
       },
       0.25,
@@ -788,6 +788,21 @@ function showPageModal(type) {
 
   modal.style.display = "flex";
   controls.enabled = false;
+
+   // Subtle GSAP pop-in animation
+  gsap.fromTo(modal, 
+    {
+      opacity: 0,
+      scale: 0.95
+    },
+    {
+      opacity: 1,
+      scale: 1,
+      duration: 0.3,
+      ease: "back.out(1.2)"
+    }
+  );
+
 }
 
 function hidePageModal() {
@@ -795,6 +810,7 @@ function hidePageModal() {
   if (!modal) return;
   modal.style.display = "none";
   controls.enabled = true;
+  
 }
 
 // Create the dialogue modal function
@@ -842,6 +858,19 @@ function showDialogue(dialogueText) {
   const dialogueTextElement = modal.querySelector(".dialogue-text");
   dialogueTextElement.textContent = dialogueText;
   modal.style.display = "flex"; // Show the modal
+     // Subtle GSAP pop-in animation
+  gsap.fromTo(modal, 
+    {
+      opacity: 0,
+      scale: 0.95
+    },
+    {
+      opacity: 1,
+      scale: 1,
+      duration: 0.3,
+      ease: "back.out(1.2)"
+    }
+  );
 }
 
 function onClick(event) {

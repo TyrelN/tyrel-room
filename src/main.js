@@ -21,8 +21,8 @@ const defaultCameraPosition = new THREE.Vector3(
 );
 let defaultCameraTarget = new THREE.Vector3(0, 0, 0); // ADD THIS LINE
 
-const minPan = new THREE.Vector3(-10, -5, -5);
-const maxPan = new THREE.Vector3(10, 5, 5);
+const minPan = new THREE.Vector3(-5, -5, -3);
+const maxPan = new THREE.Vector3(5, 5, 3);
 
 // Default scene bounds
 const defaultBounds = {
@@ -30,7 +30,7 @@ const defaultBounds = {
   maxPolarAngle: Math.PI / 2.2,
   minAzimuthAngle: -Math.PI / -2,
   maxAzimuthAngle: Math.PI / 1,
-  minDistance: 5,
+  minDistance: 15,
   maxDistance: 50,
   minPan: minPan,
   maxPan: maxPan,
@@ -1037,7 +1037,7 @@ Object.assign(controls, defaultBounds);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
-controls.screenSpacePanning = false; // Ensure panning is in world space
+//controls.screenSpacePanning = false; // Ensure panning is in world space
 
 function clampTarget() {
   if (isZoomedIn) return;

@@ -173,7 +173,7 @@ function playReveal() {
     camera.position,
     {
       z: camera.position.z - 1.2,
-      duration: 6,
+      duration: 4,
       onUpdate: () => controls.update(),
     },
     0.25,
@@ -220,7 +220,7 @@ function playReveal() {
       shelfGroup.position,
       {
         x: "-=1.28",
-        duration: 6,
+        duration: 4,
         ease: "power2.inOut",
       },
       0.25,
@@ -236,11 +236,6 @@ const PAGE_CONTENT = {
     <div class="plank-image">
     <img src="/images/nvars-logo-dark.svg" alt="picture of me" />
   </div>
-    <p>
-    My work sits at the intersection of design, technology, and experience. 
-    Each project is an opportunity to craft environments that feel purposeful, 
-    memorable, and intuitive. Here are the areas I focus on most:
-  </p>
 
       <section class="work-pillars">
         <div class="pillar">
@@ -445,8 +440,8 @@ const environmentMap = new THREE.CubeTextureLoader(manager)
 
 // Tall, narrow cone for flame
 const flameGeo = new THREE.ConeGeometry(
-  0.05, // base radius ~ half candle tip width
-  0.3, // height
+  0.08, // base radius ~ half candle tip width
+  0.4, // height
   16, // radial segments
   16, // height segments
   true, // open ended
@@ -498,103 +493,129 @@ const flameMaterial = new THREE.ShaderMaterial({
   `,
 });
 
-const marioCloudMaterial = new THREE.ShaderMaterial({
+const cloudMaterial = new THREE.ShaderMaterial({
   transparent: false,
   depthWrite: true,
   uniforms: {
     uTime: { value: 0 },
+
+    // Soft angled sunlight
     uLightDir: { value: new THREE.Vector3(0.4, 0.9, 0.2).normalize() },
-    uLightColor: { value: new THREE.Color(0.5, 0.55, 0.7) }, // Cool grey-blue
-    uShadowColor: { value: new THREE.Color(0.12, 0.1, 0.2) }, // Very dark cool grey
-    uMidColor: { value: new THREE.Color(0.35, 0.38, 0.55) }, // Mid-tone cool grey-blue
+
+    // pallete
+    uLightColor: { value: new THREE.Color(0.537, 0.541, 0.969) },   // soft highlight
+    uShadowColor: { value: new THREE.Color(0.682, 0.686, 0.961) },    // cool pastel blue
+    uMidColor: { value: new THREE.Color(0.588, 0.6, 0.91) },     // airy mid tone
   },
+//
   vertexShader: `
     uniform float uTime;
+
     varying vec3 vNormal;
     varying vec3 vWorldPos;
     varying vec3 vLocalPos;
 
+    // Soft organic pseudo-noise
     float softNoise(vec3 p) {
-      return sin(p.x * 0.5) * cos(p.y * 0.7) * sin(p.z * 0.6);
+      return sin(p.x) * sin(p.y) * sin(p.z);
     }
 
-    float layeredNoise(vec3 p) {
-      float n = softNoise(p) * 0.5;
-      n += softNoise(p * 2.0) * 0.25;
-      n += softNoise(p * 4.0) * 0.125;
+    // Large rounded cloud lobes
+    float largeNoise(vec3 p) {
+      float n = softNoise(p * 0.4) * 0.6;
+      n += softNoise(p * 0.8) * 0.3;
       return n;
     }
 
-    float ripple(vec3 p, float time) {
-      float wave1 = sin(p.x * 3.0 + time) * cos(p.y * 2.0 + time * 0.7) * 0.5;
-      float wave2 = sin(p.z * 2.5 + time * 0.5) * sin(p.x * 1.5 + time * 0.3) * 0.3;
-      return wave1 + wave2;
+    // Smaller surface detail
+    float detailNoise(vec3 p) {
+      float n = softNoise(p * 2.0) * 0.2;
+      n += softNoise(p * 4.0) * 0.1;
+      return n;
     }
 
     void main() {
-      vNormal = normalize(normalMatrix * normal);
+
       vLocalPos = position;
 
-      float n = layeredNoise(position + uTime * 0.03);
-      float rippleWave = ripple(position, uTime * 0.5);
-      vec3 displaced = position + normal * (n * 0.08 + rippleWave * 0.30);  // Changed from 0.05 to 0.15
+      // Slow vertical convection flow
+      vec3 flow = position;
+      flow.y += uTime * 0.15;
+      flow.x += sin(uTime * 0.2 + position.y) * 0.2;
+
+      float bigShape = largeNoise(flow);
+      float detail = detailNoise(flow + bigShape);
+
+      float displacement = bigShape * 0.6 + detail * 0.3;
+
+      // Puff upward bias (Ghibli-style billow)
+      displacement *= smoothstep(-1.0, 1.5, position.y);
+
+      vec3 displaced = position + normal * displacement * 0.4;
+
+      // Slight vertical exaggeration
+      displaced.y *= 1.1;
 
       vec4 worldPos = modelMatrix * vec4(displaced, 1.0);
+
       vWorldPos = worldPos.xyz;
+      vNormal = normalize(normalMatrix * normal);
 
       gl_Position = projectionMatrix * viewMatrix * worldPos;
     }
   `,
+
   fragmentShader: `
     uniform vec3 uLightDir;
-    uniform vec3 uLightColor;
-    uniform vec3 uShadowColor;
-    uniform vec3 uMidColor;
+uniform vec3 uLightColor;
+uniform vec3 uShadowColor;
+uniform vec3 uMidColor;
 
-    varying vec3 vNormal;
-    varying vec3 vWorldPos;
-    varying vec3 vLocalPos;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+varying vec3 vLocalPos;
 
-    float softNoise(vec3 p) {
-      return sin(p.x * 0.5) * cos(p.y * 0.7) * sin(p.z * 0.6);
-    }
+float softNoise(vec3 p) {
+  return sin(p.x * 0.5) * cos(p.y * 0.5) * sin(p.z * 0.5);
+}
 
-    float layeredNoise(vec3 p) {
-      float n = softNoise(p) * 0.5;
-      n += softNoise(p * 2.0) * 0.25;
-      n += softNoise(p * 4.0) * 0.125;
-      return n;
-    }
+void main() {
 
-    void main() {
-      vec3 normal = normalize(vNormal);
-      vec3 lightDir = normalize(uLightDir);
+  vec3 normal = normalize(vNormal);
+  vec3 lightDir = normalize(uLightDir);
 
-      float ndl = dot(normal, lightDir);
-      float depthNoise = layeredNoise(vLocalPos) * 0.5 + 0.5;
+  float ndl = dot(normal, lightDir);
 
-      // Three-step color ramp
-      vec3 baseColor;
-      if (ndl < 0.3) {
-        baseColor = mix(uShadowColor, uMidColor, (ndl + 0.3) / 0.6);
-      } else {
-        baseColor = mix(uMidColor, uLightColor, (ndl - 0.3) / 0.7);
-      }
+  // --- HEIGHT BASED SHADOW MASK ---
+  // Assuming sphere radius ~2.0
+  // Bottom is around -2.0
+ float bottomShadow = 1.0 - smoothstep(-2.0, 0.5, vLocalPos.y);
 
-      // Blend with depth noise
-      baseColor = mix(baseColor, baseColor * 1.2, depthNoise * 0.3);
+  // Light ramp (for highlights only)
+  float lightStep = smoothstep(0.2, 0.85, ndl);
 
-      // Lavender rim light
-      vec3 viewDir = normalize(cameraPosition - vWorldPos);
-      float rim = 1.0 - max(dot(viewDir, normal), 0.0);
-      rim = smoothstep(0.4, 0.9, rim);
+  // Base lighting (mid to highlight)
+  vec3 litColor = mix(uMidColor, uLightColor, lightStep);
 
-      baseColor += rim * vec3(0.85, 0.7, 0.9) * 0.2;  // Lavender rim glow
+  // Apply shadow ONLY at bottom
+  vec3 baseColor = mix(litColor, uShadowColor, bottomShadow * 0.8);
 
-      gl_FragColor = vec4(baseColor, 1.0);
-    }
-  `,
+  // Subtle internal variation
+  float depth = softNoise(vLocalPos * 0.8) * 0.5 + 0.5;
+  baseColor *= mix(0.95, 1.05, depth);
+
+  // Subtle rim glow
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
+  float rim = 1.0 - max(dot(viewDir, normal), 0.0);
+  rim = smoothstep(0.6, 1.0, rim);
+
+  baseColor += rim * vec3(0.75, 0.88, 1.0) * 0.15;
+
+  gl_FragColor = vec4(baseColor, 1.0);
+}
+  `
 });
+
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -1015,7 +1036,7 @@ gltfLoader.load(
             map: VideoTexture,
           });
         } else if (child.name.includes("cloud")) {
-          child.material = marioCloudMaterial;
+          child.material = cloudMaterial;
         } else if (child.name.includes("candle")) {
           //add flame geometry and shader to origin of candle mesh
           const flame = new THREE.Mesh(flameGeo, flameMaterial);
@@ -1097,6 +1118,8 @@ function playHoverAnimation(object, isHovering) {
   if (
     id === "computer-monitor" ||
     object.name.includes("monitor") ||
+    id === "computer" ||
+    object.name.includes("computer") ||
     id === "piano-keys" ||
     object.name.includes("piano") ||
     id === "secret-shelf-First_Tex" ||
@@ -1116,7 +1139,7 @@ function playHoverAnimation(object, isHovering) {
 
 const render = () => {
   // Update shader time uniform
-  marioCloudMaterial.uniforms.uTime.value += 0.01;
+  cloudMaterial.uniforms.uTime.value += 0.01;
   flameMaterial.uniforms.uTime.value += 0.01;
   fans.forEach((fan) => {
     fan.rotation.z -= 0.05; // Adjust speed as needed

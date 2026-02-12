@@ -5,7 +5,6 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Howl, Howler } from "howler";
-import { clamp } from "three/src/math/MathUtils.js";
 
 const canvas = document.querySelector("#experience-canvas");
 const sizes = {
@@ -19,7 +18,6 @@ const defaultCameraPosition = new THREE.Vector3(
   10.700431771364817,
   -32.55024110340833,
 );
-let defaultCameraTarget = new THREE.Vector3(0, 0, 0); // ADD THIS LINE
 
 const minPan = new THREE.Vector3(-5, -5, -3);
 const maxPan = new THREE.Vector3(5, 5, 3);
@@ -72,7 +70,6 @@ const loadingScreen = document.querySelector(".loading-screen");
 const loadingScreenButton = document.querySelector(".loading-screen-button");
 const noSoundButton = document.querySelector(".no-sound-button");
 
-
 manager.onLoad = function () {
   loadingScreenButton.style.border = "8px solid #a1abf2";
   loadingScreenButton.style.background = "#2b2749";
@@ -87,22 +84,21 @@ manager.onLoad = function () {
   noSoundButton.textContent = "Enter without Sound";
 
   function handleEnter(withSound = true) {
-    console.log("Enter button clicked");
     if (isDisabled) return;
 
-  noSoundButton.textContent = "Welcome";
-  loadingScreenButton.style.cursor = "default";
-  loadingScreenButton.style.border = "8px solid #a1abf2";
-  loadingScreenButton.style.background = "#2b2749";
-  loadingScreenButton.style.color = "#e6dede";
-  loadingScreenButton.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
-  loadingScreenButton.textContent = "~ Tyrel Narciso ~";
+    noSoundButton.textContent = "Welcome";
+    loadingScreenButton.style.cursor = "default";
+    loadingScreenButton.style.border = "8px solid #a1abf2";
+    loadingScreenButton.style.background = "#2b2749";
+    loadingScreenButton.style.color = "#e6dede";
+    loadingScreenButton.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+    loadingScreenButton.textContent = "~ Tyrel Narciso ~";
 
     isDisabled = true;
 
     if (!withSound) {
       isMuted = true;
-       Howler.mute(true); // ⭐ Use Howler.mute() instead of setting volume to 0
+      Howler.mute(true); // ⭐ Use Howler.mute() instead of setting volume to 0
     } else {
       backgroundMusic.play();
     }
@@ -136,69 +132,93 @@ manager.onLoad = function () {
 };
 
 function playReveal() {
-  console.log("📖 Cinematic page peel with skew");
-
   const page = document.querySelector(".loading-page");
 
   const tl = gsap.timeline({
-    defaults: { ease: "power2.inOut" }
+    defaults: { ease: "power2.inOut" },
   });
 
   // 1️⃣ Small anticipation delay
   tl.to({}, { duration: 0.25 });
 
-  tl.to(page, {
-  y: -8,
-  duration: 0.6,
-}, 0.25);
+  tl.to(
+    page,
+    {
+      y: -8,
+      duration: 0.6,
+    },
+    0.25,
+  );
 
   // 2️⃣ Subtle skew (paper tension)
-  tl.to(page, {
-    skewY: 3,
-    duration: 0.6,
-  }, 0.25);
+  tl.to(
+    page,
+    {
+      skewY: 3,
+      duration: 0.6,
+    },
+    0.25,
+  );
 
   // 3️⃣ Camera push forward
-  tl.to(camera.position, {
-    z: camera.position.z - 1.2,
-    duration: 6,
-    onUpdate: () => controls.update()
-  }, 0.25);
+  tl.to(
+    camera.position,
+    {
+      z: camera.position.z - 1.2,
+      duration: 6,
+      onUpdate: () => controls.update(),
+    },
+    0.25,
+  );
 
   // 4️⃣ Main rotation
-  tl.to(loadingScreen, {
-    rotateY: -140,
-    duration: 3,
-  }, 0.35);
+  tl.to(
+    loadingScreen,
+    {
+      rotateY: -140,
+      duration: 3,
+    },
+    0.35,
+  );
 
   // 5️⃣ Inner page rotates further (curl illusion)
-  tl.to(page, {
-    rotateY: -160,
-    skewY: 0,          // relax skew during peel
-    duration: 3,
-  }, 0.35);
+  tl.to(
+    page,
+    {
+      rotateY: -160,
+      skewY: 0, // relax skew during peel
+      duration: 3,
+    },
+    0.35,
+  );
 
   // 6️⃣ Fade near end
-  tl.to(loadingScreen, {
-    opacity: 0,
-    duration: 0.9,
-    onComplete: () => {
-      controls.enabled = true;
-      loadingScreen.remove();
-      console.log("✅ Page peeled cleanly");
-    }
-  }, "-=0.4");
+  tl.to(
+    loadingScreen,
+    {
+      opacity: 0,
+      duration: 0.9,
+      onComplete: () => {
+        controls.enabled = true;
+        loadingScreen.remove();
+      },
+    },
+    "-=0.4",
+  );
 
-  console.log("shelfgroup", shelfGroup);
   // Move shelf into place
- if (shelfGroup) {
-  tl.to(shelfGroup.position, {
-    x: "-=1.28",
-    duration: 6,
-    ease: "power2.inOut",
-  }, 0.25);
+  if (shelfGroup) {
+    tl.to(
+      shelfGroup.position,
+      {
+        x: "-=1.28",
+        duration: 6,
+        ease: "power2.inOut",
+      },
+      0.25,
+    );
+  }
 }
-    }
 
 //modal content for work planks
 const PAGE_CONTENT = {
@@ -401,7 +421,6 @@ const PAGE_CONTENT = {
     </div>
   `,
 };
-
 
 const EXCLUDED_IDS = []; // Filter out excluded objects
 // Loaders
@@ -810,24 +829,22 @@ function onClick(event) {
   //if it's a link, redirect to that and return
   const url = hovered.userData.link ? hovered.userData.link : null;
   if (url) {
-    console.log("url found");
     window.open(url, "_blank");
     return;
   }
 
   //if it's a plank (work, about, contact), create a full screen modal and display the dialogue text with overflow scroll if needed, and return
   if (hovered.userData.modal) {
-    console.log("plank found");
     showPageModal(hovered.userData.modal);
     return;
   }
 
   //if it's the secret-shelf, grab the shelf group and move it
-  if (hovered.name === "secret-shelf-First_Tex") {  
+  if (hovered.name === "secret-shelf-First_Tex") {
     if (shelfAnimating) return; // block click spam while animating
 
     const shelfGroup = hovered.parent; // Assuming the shelf parts are grouped under a parent
-    if(!shelfGroup) return;
+    if (!shelfGroup) return;
 
     shelfAnimating = true; // Start animation lock
     if (shelfOpened) {
@@ -840,7 +857,7 @@ function onClick(event) {
         onComplete: () => {
           shelfOpened = !shelfOpened; // Toggle the shelf state
           shelfAnimating = false; // Unlock after animation completes
-      }
+        },
       });
     } else {
       // Move shelf to the right by 200 on the x axis
@@ -852,9 +869,8 @@ function onClick(event) {
         onComplete: () => {
           shelfOpened = !shelfOpened; // Toggle the shelf state
           shelfAnimating = false; // Unlock after animation completes
-
-      }
-    });
+        },
+      });
     }
     return;
   }
@@ -990,34 +1006,28 @@ gltfLoader.load(
         } else if (child.name.includes("fan")) {
           fans.push(child);
         } else if (child.name.includes("secret")) {
-          if(child.name.includes("secret-shelf")){
+          if (child.name.includes("secret-shelf")) {
             shelfParts.push(child);
-          }
-          else if(child.name.includes("plank-secret"))
-          secret.push(child);
+          } else if (child.name.includes("plank-secret")) secret.push(child);
           shelfParts.push(child);
         }
       }
     });
     shelfGroup = new THREE.Group();
     shelfGroup.name = "shelfGroup";
-    shelfParts.forEach(part => {
+    shelfParts.forEach((part) => {
       shelfGroup.attach(part);
     });
     glb.scene.add(shelfGroup);
-
 
     scene.add(glb.scene);
     world = glb.scene; // Store reference to the loaded scene
     world.traverse((child) => {
       if (child.userData.interactable) {
         interactables.push(child);
-        console.log("found interactable" + child.name);
       }
     });
-    console.log("Portfolio room loaded");
     sceneReady = true;
-    console.log(interactables.length + " interactables found");
   },
   (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
   (error) => console.error("Model load error:", error),
@@ -1109,11 +1119,6 @@ const render = () => {
     if (validHit) {
       const hoveredObject = validHit.object;
       if (hovered !== hoveredObject) {
-        console.log(
-          "Hovering over:",
-          hoveredObject.name,
-          hoveredObject.userData,
-        );
         if (hovered) playHoverAnimation(hovered, false);
         playHoverAnimation(hoveredObject, true);
         hovered = hoveredObject;

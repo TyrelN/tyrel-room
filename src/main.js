@@ -6,6 +6,14 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Howl, Howler } from "howler";
 
+
+// SUPPRESS LOGS IN PRODUCTION
+if (import.meta.env.PROD) {
+  console.log = () => {};
+  console.warn = () => {};
+}
+
+// Canvas
 const canvas = document.querySelector("#experience-canvas");
 const sizes = {
   height: window.innerHeight,
@@ -980,6 +988,16 @@ gltfLoader.load(
   (glb) => {
     glb.scene.traverse((child) => {
       if (child.isMesh) {
+
+        // remove mipmap
+
+        const mat = child.material;
+
+    if (mat.map) {
+      mat.map.generateMipmaps = false;
+      mat.map.minFilter = THREE.LinearFilter;
+      mat.map.needsUpdate = true;
+    }
         if (child.name.includes("glass")) {
           child.material = new THREE.MeshPhysicalMaterial({
             transmission: 1,
